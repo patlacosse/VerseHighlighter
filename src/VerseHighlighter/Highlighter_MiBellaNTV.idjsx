@@ -1,0 +1,186 @@
+// $#targetengine 'Highlighter_MiBellaNTV';
+
+// SETTINGS
+var DEBUG = true;
+var DEFAULT_CSTYLE = '_scripture-highlight';
+var MODIFIER = '-highlight';
+
+if (DEBUG === true) {
+    main();
+}
+else {
+    app.doScript(main, ScriptLanguage.JAVASCRIPT, [], UndoModes.ENTIRE_SCRIPT, 'Toggle Verse Highlighting');
+}
+
+function main() {
+    
+    app.scriptPreferences.measurementUnit = MeasurementUnits.POINTS;
+    
+    var d = app.activeDocument;
+    
+    var sel = app.selection[0];
+    
+    if (sel.constructor.name != 'Text'
+        && sel.constructor.name != 'Character'
+        && sel.constructor.name != 'Word'
+        && sel.constructor.name != 'TextStyleRange'
+        && sel.constructor.name != 'Line'
+        && sel.constructor.name != 'Paragraph') {
+            alert('Select text and try again.');
+            return;
+    }
+    
+    var defaultStyle = d.characterStyles.itemByName(DEFAULT_CSTYLE);
+
+    if (defaultStyle.isValid === false) {
+        alert('The default highlight character style (' + DEFAULT_CSTYLE + ') does not seem to exist. Script will terminate.');
+        return;
+    }
+    // var regExp = new RegExp(MODIFIER);
+    var coll = sel.textStyleRanges;
+    // alert(coll.constructor.name);
+    processStylableObjects(coll);
+
+    // for (var i = 0; i < coll.length; i += 1) {
+    //     tsr = coll[i];
+    //     cs = tsr.appliedCharacterStyle.name;
+    //     csHighlightName = getStyleName(cs, DEFAULT, MODIFIER);
+    //     // if (cs === '[None]') {
+    //     //     csHighlightName = DEFAULT;
+    //     // }
+    //     // else {
+    //     //     if (regExp.test(cs)) {
+    //     //         if (cs === DEFAULT) {
+    //     //             csHighlightName = '[None]';
+    //     //         }
+    //     //         else {
+    //     //             csHighlightName = cs.replace('-highlight', '');
+    //     //         }
+    //     //     }
+    //     //     else {
+    //     //         csHighlightName = cs + MODIFIER;
+    //     //     }
+    //     // }
+    //     csHighlightStyle = d.characterStyles.itemByName(csHighlightName);
+    //     if (csHighlightStyle.isValid) {
+    //         tsr.appliedCharacterStyle = csHighlightStyle;
+    //         if (csHighlightName === '[None]') {
+    //             tsr.clearOverrides();
+    //         }
+    //     }
+    //     else {
+    //         csHighlightStyle = d.characterStyles.add();
+    //         csHighlightStyle.name = csHighlightName;
+    //         csHighlightStyle.basedOn = tsr.appliedCharacterStyle;
+    //         csHighlightStyle.underline = defaultStyle.underline;
+    //         csHighlightStyle.underlineColor = defaultStyle.underlineColor;
+    //         csHighlightStyle.underlineOffset = defaultStyle.underlineOffset;
+    //         csHighlightStyle.underlineWeight = defaultStyle.underlineWeight;
+
+    //         // Add the PMS color based on the swatch name
+    //         tsr.appliedCharacterStyle = csHighlightStyle;
+    //         alert('The script created the style ' + csHighlightName + '. Please adjust the style properties as needed.')
+    //     }
+
+
+        
+    // }
+    // if (/\s/.test(app.selection[0].characters[app.selection[0].characters.length-1].contents) === true) {
+    processFinalTSR(sel);
+    
+
+}
+
+function processStylableObjects (objs) {
+    var obj;
+    for (var i = 0; i < objs.length; i += 1) {
+        obj = objs[i];
+        processStylableObject(obj)
+    }
+}
+
+function processStylableObject (obj) {
+
+    var newStyle
+
+    newStyle = initializeStyle(obj)
+
+    obj.appliedCharacterStyle = newStyle;
+
+    if (newStyle.name === '[None]') {
+        obj.clearOverrides();
+    }
+
+}
+
+function initializeStyle (obj) {
+
+    var origStyle, origStyleName, newStyle, newStyleName, defaultStyle;
+    
+    var d = app.activeDocument;
+    defaultStyle = d.characterStyles.itemByName(DEFAULT_CSTYLE);
+
+    origStyle = obj.appliedCharacterStyle;
+    origStyleName = origStyle.name;
+
+    newStyleName = getStyleName(origStyleName);
+    newStyle = d.characterStyles.itemByName(newStyleName);
+    if (newStyle.isValid) {
+        return newStyle
+    }
+    newStyle = d.characterStyles.add();
+    newStyle.name = csHighlightName;
+    newStyle.basedOn = tsr.appliedCharacterStyle;
+    newStyle.underline = defaultStyle.underline;
+    newStyle.underlineColor = defaultStyle.underlineColor;
+    newStyle.underlineOffset = defaultStyle.underlineOffset;
+    newStyle.underlineWeight = defaultStyle.underlineWeight;
+    
+    alert('Created new character style (' + newStyle.name + '). Please adjust style properties as needed.' );
+    
+    return newStyle;
+
+}
+
+function getStyleName (origName) {
+
+    var newName;
+    var regExp = new RegExp(MODIFIER);
+    if (origName === '[None]') {
+        newName = DEFAULT_CSTYLE;
+    }
+    else {
+        if (regExp.test(origName)) {
+            if (origName === DEFAULT_CSTYLE) {
+                newName = '[None]';
+            }
+            else {
+                newName = origName.replace('-highlight', '');
+            }
+        }
+        else {
+            newName = origName + MODIFIER;
+        }
+    }
+    return newName;
+}
+
+function processFinalTSR (sel) {
+
+    var finalTSR = sel.textStyleRanges[sel.textStyleRanges.length-1];
+    var finalTSRChar = finalTSR.characters[finalTSR.characters.length-1];
+    var finalSelChar = sel.characters[sel.characters.length-1];
+    
+    // var finalChar = finalTSR.characters[finalTSR.characters.length-1];
+    // if (/\s/.test(finalChar.contents) == true) {
+    //     finalChar.appliedCharacterStyle = d.characterStyles.itemByName('[None]');
+    //     finalChar.clearOverrides();
+    // }
+    for (var i = finalSelChar.index + 1; i < finalTSRChar.index + 1; i += 1) {
+        c = finalTSR.parentStory.characters[i];
+        processStylableObject(c)
+    }
+    // alert(sel.characters[sel.characters.length-1].index)
+    // alert(finalChar.index)
+    // sel.insertionPoints[0].select();
+}
