@@ -1,0 +1,19 @@
+{
+    "name": "auto.use-project-name",
+    "description": "auto.use-package-readme",
+    "version": "1.0.0",
+    "install": {
+        "indesign_releases": [
+            "21",
+            "23"
+        ],
+        "indesign_script_location": {
+            "21": "%APPDATA%\\Adobe\\InDesign\\Version 16.0\\en_US\\Scripts\\Scripts Panel",
+            "23": "%APPDATA%\\Adobe\\InDesign\\Version 18.0\\en_US\\Scripts\\Scripts Panel"
+        }
+    },
+    "dev": {
+        "dist_path": "dist",
+        "src_path": "src"
+    }
+}
