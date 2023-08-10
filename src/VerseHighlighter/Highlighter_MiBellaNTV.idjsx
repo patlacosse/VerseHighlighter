@@ -36,56 +36,14 @@ function main() {
         alert('The default highlight character style (' + DEFAULT_CSTYLE + ') does not seem to exist. Script will terminate.');
         return;
     }
-    // var regExp = new RegExp(MODIFIER);
-    var coll = sel.textStyleRanges;
-    // alert(coll.constructor.name);
+
+    var coll = [] // This part because for a while I was collecting only all but the last
+                  // textStyleRange. Now collecting all and then following up on final.
+    for (var i = 0; i < sel.textStyleRanges.length; i += 1) {
+        coll.push(sel.textStyleRanges[i])
+    }
     processStylableObjects(coll);
-
-    // for (var i = 0; i < coll.length; i += 1) {
-    //     tsr = coll[i];
-    //     cs = tsr.appliedCharacterStyle.name;
-    //     csHighlightName = getStyleName(cs, DEFAULT, MODIFIER);
-    //     // if (cs === '[None]') {
-    //     //     csHighlightName = DEFAULT;
-    //     // }
-    //     // else {
-    //     //     if (regExp.test(cs)) {
-    //     //         if (cs === DEFAULT) {
-    //     //             csHighlightName = '[None]';
-    //     //         }
-    //     //         else {
-    //     //             csHighlightName = cs.replace('-highlight', '');
-    //     //         }
-    //     //     }
-    //     //     else {
-    //     //         csHighlightName = cs + MODIFIER;
-    //     //     }
-    //     // }
-    //     csHighlightStyle = d.characterStyles.itemByName(csHighlightName);
-    //     if (csHighlightStyle.isValid) {
-    //         tsr.appliedCharacterStyle = csHighlightStyle;
-    //         if (csHighlightName === '[None]') {
-    //             tsr.clearOverrides();
-    //         }
-    //     }
-    //     else {
-    //         csHighlightStyle = d.characterStyles.add();
-    //         csHighlightStyle.name = csHighlightName;
-    //         csHighlightStyle.basedOn = tsr.appliedCharacterStyle;
-    //         csHighlightStyle.underline = defaultStyle.underline;
-    //         csHighlightStyle.underlineColor = defaultStyle.underlineColor;
-    //         csHighlightStyle.underlineOffset = defaultStyle.underlineOffset;
-    //         csHighlightStyle.underlineWeight = defaultStyle.underlineWeight;
-
-    //         // Add the PMS color based on the swatch name
-    //         tsr.appliedCharacterStyle = csHighlightStyle;
-    //         alert('The script created the style ' + csHighlightName + '. Please adjust the style properties as needed.')
-    //     }
-
-
-        
-    // }
-    // if (/\s/.test(app.selection[0].characters[app.selection[0].characters.length-1].contents) === true) {
+    
     processFinalTSR(sel);
     
 
@@ -129,8 +87,8 @@ function initializeStyle (obj) {
         return newStyle
     }
     newStyle = d.characterStyles.add();
-    newStyle.name = csHighlightName;
-    newStyle.basedOn = tsr.appliedCharacterStyle;
+    newStyle.name = newStyleName;
+    newStyle.basedOn = obj.appliedCharacterStyle;
     newStyle.underline = defaultStyle.underline;
     newStyle.underlineColor = defaultStyle.underlineColor;
     newStyle.underlineOffset = defaultStyle.underlineOffset;
@@ -168,19 +126,21 @@ function getStyleName (origName) {
 function processFinalTSR (sel) {
 
     var finalTSR = sel.textStyleRanges[sel.textStyleRanges.length-1];
-    var finalTSRChar = finalTSR.characters[finalTSR.characters.length-1];
     var finalSelChar = sel.characters[sel.characters.length-1];
     
-    // var finalChar = finalTSR.characters[finalTSR.characters.length-1];
-    // if (/\s/.test(finalChar.contents) == true) {
-    //     finalChar.appliedCharacterStyle = d.characterStyles.itemByName('[None]');
-    //     finalChar.clearOverrides();
-    // }
-    for (var i = finalSelChar.index + 1; i < finalTSRChar.index + 1; i += 1) {
-        c = finalTSR.parentStory.characters[i];
-        processStylableObject(c)
+    var c;
+    var chars = [];
+    var collect = false;
+    for (var i = 0; i < finalTSR.characters.length; i += 1) {
+        c = finalTSR.characters[i];
+        if (collect === true) {
+            chars.push(c);
+        }
+        if (c === finalSelChar) {
+            collect = true;
+        }
     }
-    // alert(sel.characters[sel.characters.length-1].index)
-    // alert(finalChar.index)
-    // sel.insertionPoints[0].select();
+    for (var i = 0; i < chars.length; i += 1) {
+        processStylableObject(chars[i]);
+    }
 }
