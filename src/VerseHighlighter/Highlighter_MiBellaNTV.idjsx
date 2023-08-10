@@ -1,7 +1,7 @@
 // $#targetengine 'Highlighter_MiBellaNTV';
 
 // SETTINGS
-var DEBUG = true;
+var DEBUG = false;
 var DEFAULT_CSTYLE = '_scripture-highlight';
 var MODIFIER = '-highlight';
 
@@ -45,6 +45,8 @@ function main() {
     processStylableObjects(coll);
     
     processFinalTSR(sel);
+
+    sel.textStyleRanges[0].insertionPoints[0].select();
     
 
 }
